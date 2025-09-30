@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,10 +15,12 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class WebSecurityConfig {
     private final CustomUserDetailsService customUserDetailsService;
+    private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
 
     @Autowired
     public WebSecurityConfig(CustomUserDetailsService customUserDetailsService) {
         this.customUserDetailsService = customUserDetailsService;
+        this.customAuthenticationSuccessHandler = new CustomAuthenticationSuccessHandler();
     }
 
     private final String[] publicUrl = {"/",
@@ -44,6 +47,30 @@ public class WebSecurityConfig {
             auth.requestMatchers(publicUrl).permitAll();
             auth.anyRequest().authenticated();
         });
+
+        /*
+        formLogin()
+            → Enables form-based login.
+            → loginPage("/login") = tells Spring Security to use your custom login page instead of the default.
+            → permitAll() = anyone can access the login page, even if not authenticated.
+            → successHandler(customAuthenticationSuccessHandler) = delegate login success logic to your custom handler.
+
+        logout()
+            → logoutUrl("/logout") = when user hits /logout, Spring clears their session.
+            → logoutSuccessUrl("/") = redirect to home page after logging out.
+
+        cors() and csrf()
+            → You enabled CORS with defaults and disabled CSRF (common in APIs but careful for production).
+
+        * */
+
+        http.formLogin(form -> form.loginPage("/login").permitAll()
+                .successHandler(customAuthenticationSuccessHandler))
+                .logout(logout -> {
+                    logout.logoutUrl("/logout");
+                    logout.logoutSuccessUrl("/");
+                }).cors(Customizer.withDefaults()).csrf(csrf -> csrf.disable());
+
         return http.build();
     }
 
