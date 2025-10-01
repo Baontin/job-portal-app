@@ -78,7 +78,7 @@ public class WebSecurityConfig {
     // defines how to perform authentication.
     /* DaoAuthenticationProvider:
     - A built-in implementation of AuthenticationProvider.
-    - ready-made provider for DB authentication (fits your project perfectly).
+    - ready-made provider for DB authentication
     * */
 
     /*
