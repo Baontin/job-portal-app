@@ -43,11 +43,11 @@ public class RecruiterProfile {
         this.profilePhoto = profilePhoto;
     }
 
-    public int getUser_account_id() {
+    public int getUserAccountId() {
         return user_account_id;
     }
 
-    public void setUser_account_id(int user_account_id) {
+    public void setUserAccountId(int user_account_id) {
         this.user_account_id = user_account_id;
     }
 
@@ -114,6 +114,8 @@ public class RecruiterProfile {
     public void setProfilePhoto(String profilePhoto) {
         this.profilePhoto = profilePhoto;
     }
+
+
 
     @Override
     public String toString() {
