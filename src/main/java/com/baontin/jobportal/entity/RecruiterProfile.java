@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 public class RecruiterProfile {
 
     @Id
-    private int user_account_id;
+    private int userAccountId;
 
     @OneToOne
     @JoinColumn(name = "user_account_id")
@@ -30,9 +30,9 @@ public class RecruiterProfile {
         this.userId = users;
     }
 
-    public RecruiterProfile(int user_account_id, Users userId, String firstName, String lastName,
+    public RecruiterProfile(int userAccountId, Users userId, String firstName, String lastName,
             String company, String country, String city, String state, String profilePhoto) {
-        this.user_account_id = user_account_id;
+        this.userAccountId = userAccountId;
         this.userId = userId;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -44,11 +44,11 @@ public class RecruiterProfile {
     }
 
     public int getUserAccountId() {
-        return user_account_id;
+        return userAccountId;
     }
 
-    public void setUserAccountId(int user_account_id) {
-        this.user_account_id = user_account_id;
+    public void setUserAccountId(int userAccountId) {
+        this.userAccountId = userAccountId;
     }
 
     public Users getUserId() {
@@ -115,12 +115,17 @@ public class RecruiterProfile {
         this.profilePhoto = profilePhoto;
     }
 
+    @Transient
+    public String getPhotosImagePath() {
+        if (profilePhoto == null) return null;
+        return "/photos/recruiter/" + userAccountId + "/" + profilePhoto;
+    }
 
 
     @Override
     public String toString() {
         return "RecruiterProfile{" +
-                "user_account_id=" + user_account_id +
+                "userAccountId=" + userAccountId +
                 ", userId=" + userId +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +

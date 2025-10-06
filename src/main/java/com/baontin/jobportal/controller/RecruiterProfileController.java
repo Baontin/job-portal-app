@@ -52,36 +52,27 @@ public class RecruiterProfileController {
     }
 
     @PostMapping("/addNew")
-    public String addNew(@ModelAttribute RecruiterProfile recruiterProfile,
-                         @RequestParam("image") MultipartFile multipartFile,
-                         Model model) {
-        Authentication authentication = SecurityContextHolder.getContext()
-                .getAuthentication();
+    public String addNew(RecruiterProfile recruiterProfile, @RequestParam("image") MultipartFile multipartFile, Model model) {
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (!(authentication instanceof AnonymousAuthenticationToken)) {
-            String currentUserName = authentication.getName();
-            Users users = usersRepository.findByEmail(currentUserName).orElseThrow(() -> new
-                    UsernameNotFoundException("Could not found user"));
-
+            String currentUsername = authentication.getName();
+            Users users = usersRepository.findByEmail(currentUsername).orElseThrow(() -> new UsernameNotFoundException("Could not " + "found user"));
             recruiterProfile.setUserId(users);
             recruiterProfile.setUserAccountId(users.getUserId());
         }
         model.addAttribute("profile", recruiterProfile);
-
         String fileName = "";
         if (!multipartFile.getOriginalFilename().equals("")) {
-            fileName = StringUtils.cleanPath(Objects.requireNonNull(multipartFile
-                    .getOriginalFilename()));
+            fileName = StringUtils.cleanPath(Objects.requireNonNull(multipartFile.getOriginalFilename()));
             recruiterProfile.setProfilePhoto(fileName);
         }
-
         RecruiterProfile savedUser = recruiterProfileService.addNew(recruiterProfile);
-        String uploadDir = "photos/recruiter/" + savedUser.getUserAccountId();
 
+        String uploadDir = "photos/recruiter/" + savedUser.getUserAccountId();
         try {
             FileUploadUtil.saveFile(uploadDir, fileName, multipartFile);
         } catch (Exception ex) {
-            // This prints the full stack trace (error location + cause) to the console.
             ex.printStackTrace();
         }
 
