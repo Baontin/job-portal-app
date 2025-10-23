@@ -52,7 +52,9 @@ public class RecruiterProfileController {
     }
 
     @PostMapping("/addNew")
-    public String addNew(RecruiterProfile recruiterProfile, @RequestParam("image") MultipartFile multipartFile, Model model) {
+    public String addNew(RecruiterProfile recruiterProfile,
+                         @RequestParam("image") MultipartFile multipartFile,
+                         Model model) {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (!(authentication instanceof AnonymousAuthenticationToken)) {
@@ -67,13 +69,13 @@ public class RecruiterProfileController {
             fileName = StringUtils.cleanPath(Objects.requireNonNull(multipartFile.getOriginalFilename()));
             recruiterProfile.setProfilePhoto(fileName);
         }
-        RecruiterProfile savedUser = recruiterProfileService.addNew(recruiterProfile);
+        RecruiterProfile savedProfile = recruiterProfileService.addNew(recruiterProfile);
 
-        String uploadDir = "photos/recruiter/" + savedUser.getUserAccountId();
+        String uploadDir = "photos/recruiter/" + savedProfile.getUserAccountId();
         try {
             FileUploadUtil.saveFile(uploadDir, fileName, multipartFile);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            throw new RuntimeException(ex);
         }
 
         return "redirect:/dashboard/";
