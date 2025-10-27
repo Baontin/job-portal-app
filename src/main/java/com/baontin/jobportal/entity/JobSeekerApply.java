@@ -6,21 +6,36 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.io.Serializable;
 import java.util.Date;
 
+/*
+* @UniqueConstraint(columnNames = {"userId", "job"})
+* This enforces a database-level rule to prevent duplicate combinations.
+-> if this pair of uderId = 10 & job = 2 exists in DB, it can't store more one
+-> (can't apply job than 1 times)
+* */
+
 @Entity
 @Table(uniqueConstraints = {
         @UniqueConstraint(columnNames = {"userId", "job"})
 })
+
+/* Serializable
+* Allow entity to be converted into bytes (used for sessions, caching, etc.)
+* That process = serialization — turning an object into bytes so it can be:
++ saved to disk 💾
++ sent over a network 🌐
++ stored in a session (e.g. HTTP session) 🧠
+Then later, it can be deserialized = converted back into a Java object.*/
 public class JobSeekerApply implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "userId", referencedColumnName = "user_account_id")
     private JobSeekerProfile userId;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "job", referencedColumnName = "jobPostId")
     private JobPostActivity job;
 
