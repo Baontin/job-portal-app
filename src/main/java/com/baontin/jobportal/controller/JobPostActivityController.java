@@ -1,10 +1,8 @@
 package com.baontin.jobportal.controller;
 
-import com.baontin.jobportal.entity.JobPostActivity;
-import com.baontin.jobportal.entity.RecruiterJobsDto;
-import com.baontin.jobportal.entity.RecruiterProfile;
-import com.baontin.jobportal.entity.Users;
+import com.baontin.jobportal.entity.*;
 import com.baontin.jobportal.services.JobPostActivityService;
+import com.baontin.jobportal.services.JobSeekerApplyService;
 import com.baontin.jobportal.services.UsersService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -30,12 +28,14 @@ public class JobPostActivityController {
 
     private final UsersService usersService;
     private final JobPostActivityService jobPostActivityService;
-
+    private final JobSeekerApplyService jobSeekerApplyService;
 
     @Autowired
-    public JobPostActivityController(UsersService usersService, JobPostActivityService jobPostActivityService) {
+    public JobPostActivityController(UsersService usersService, JobPostActivityService jobPostActivityService,
+                                     JobSeekerApplyService jobSeekerApplyService) {
         this.usersService = usersService;
         this.jobPostActivityService = jobPostActivityService;
+        this.jobSeekerApplyService = jobSeekerApplyService;
     }
 
     @GetMapping("/dashboard/")
@@ -120,6 +120,9 @@ public class JobPostActivityController {
                         jobPostActivityService.getRecruiterJobs(((RecruiterProfile) currentUserProfile)
                         .getUserAccountId());
                 model.addAttribute("jobPost", recruiterJobs);
+            } else {
+                List<JobSeekerApply> jobSeekerApply = jobSeekerApplyService
+                        .getCandidateJobs((JobSeekerProfile) currentUserProfile);
             }
         }
         model.addAttribute("user", currentUserProfile);
