@@ -3,6 +3,7 @@ package com.baontin.jobportal.controller;
 import com.baontin.jobportal.entity.*;
 import com.baontin.jobportal.services.JobPostActivityService;
 import com.baontin.jobportal.services.JobSeekerApplyService;
+import com.baontin.jobportal.services.JobSeekerSaveService;
 import com.baontin.jobportal.services.UsersService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -29,15 +30,26 @@ public class JobPostActivityController {
     private final UsersService usersService;
     private final JobPostActivityService jobPostActivityService;
     private final JobSeekerApplyService jobSeekerApplyService;
+    private final JobSeekerSaveService jobSeekerSaveService;
 
     @Autowired
-    public JobPostActivityController(UsersService usersService, JobPostActivityService jobPostActivityService,
-                                     JobSeekerApplyService jobSeekerApplyService) {
+    public JobPostActivityController(UsersService usersService,
+                                     JobPostActivityService jobPostActivityService,
+                                     JobSeekerApplyService jobSeekerApplyService,
+                                     JobSeekerSaveService jobSeekerSaveService) {
         this.usersService = usersService;
         this.jobPostActivityService = jobPostActivityService;
         this.jobSeekerApplyService = jobSeekerApplyService;
+        this.jobSeekerSaveService = jobSeekerSaveService;
     }
 
+    /*
+    @RequestParam(..) take value of request param =... in the url
+    eg:
+    take a request param named "job",
+    it don't always needed value (required=false) -> can be null
+    Assigned it to job variable (String job).
+    * */
     @GetMapping("/dashboard/")
     public String searchJobs(Model model,
                              @RequestParam(value = "job", required = false) String job,
@@ -53,6 +65,7 @@ public class JobPostActivityController {
                              @RequestParam(value = "days30", required = false) boolean days30
      ) {
 
+        // if true -> checkbox input will be checked (in html)
         model.addAttribute("partTime", Objects.equals(partTime, "Part-Time"));
         model.addAttribute("fullTime", Objects.equals(fullTime, "Full-Time"));
         model.addAttribute("freelance", Objects.equals(freelance, "Freelance"));
@@ -69,7 +82,7 @@ public class JobPostActivityController {
         model.addAttribute("location", location);
 
         LocalDate searchDate = null;
-        List<JobPostActivity> jobPost = null;
+        List<JobPostActivity> jobPostList = null;
         boolean dateSearchFlag = true;
         boolean remote = true;
         boolean type = true;
@@ -88,21 +101,23 @@ public class JobPostActivityController {
             partTime = "Part-Time";
             fullTime = "Full-Time";
             freelance = "Freelance";
-            remote = false;
+            type = false;
         }
 
         if (officeOnly == null && remoteOnly == null && partialRemote == null) {
             officeOnly = "Office-Only";
             remoteOnly = "Remote-Only";
             partialRemote = "Partial-Remote";
-            type = false;
+            remote = false;
         }
 
         if (!dateSearchFlag && !remote && !type && !StringUtils.hasText(job) && !StringUtils.hasText(location)) {
-            jobPost = jobPostActivityService.getAll();
+            jobPostList = jobPostActivityService.getAll();
+//            System.out.println("jobPostList no search: " + jobPostList);
         } else {
-            jobPost = jobPostActivityService.search(job, location, Arrays.asList(partTime, fullTime, freelance),
+            jobPostList = jobPostActivityService.search(job, location, Arrays.asList(partTime, fullTime, freelance),
                     Arrays.asList(remoteOnly, officeOnly, partialRemote), searchDate);
+            System.out.println("jobPostList have search: " + jobPostList);
         }
 
         Object currentUserProfile = usersService.getCurrentUserProfile();
@@ -121,8 +136,43 @@ public class JobPostActivityController {
                         .getUserAccountId());
                 model.addAttribute("jobPost", recruiterJobs);
             } else {
-                List<JobSeekerApply> jobSeekerApply = jobSeekerApplyService
+                List<JobSeekerApply> jobSeekerApplyList = jobSeekerApplyService
                         .getCandidateJobs((JobSeekerProfile) currentUserProfile);
+                List<JobSeekerSave> jobSeekerSaveList = jobSeekerSaveService
+                        .getCandidateJobs((JobSeekerProfile) currentUserProfile);
+
+
+                boolean applied;
+                boolean saved;
+
+                for (JobPostActivity jobPost : jobPostList) {
+                    applied = false;
+                    saved = false;
+                    for (JobSeekerApply jobSeekerApply : jobSeekerApplyList) {
+                        if (Objects.equals(jobPost.getJobPostId(), jobSeekerApply.getJob().getJobPostId())) {
+                            jobPost.setIsActive(true);
+                            applied = true;
+                            break;
+                        }
+                    }
+
+                    for (JobSeekerSave jobSeekerSave : jobSeekerSaveList) {
+                        if (Objects.equals(jobPost.getJobPostId(), jobSeekerSave.getJob().getJobPostId())) {
+                            jobPost.setIsSaved(true);
+                            saved = true;
+                            break;
+                        }
+                    }
+
+                    if (!applied) {
+                        jobPost.setIsActive(false);
+                    }
+                    if (!saved) {
+                        jobPost.setIsSaved(false);
+                    }
+                }
+
+                model.addAttribute("jobPost", jobPostList);
             }
         }
         model.addAttribute("user", currentUserProfile);

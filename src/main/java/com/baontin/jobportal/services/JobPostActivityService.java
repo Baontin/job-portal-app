@@ -52,9 +52,10 @@ public class JobPostActivityService {
 
     public List<JobPostActivity> search(String job,
                                         String location,
-                                        List<String> remote,
                                         List<String> type,
+                                        List<String> remote,
                                         LocalDate searchDate) {
+        System.out.println("job: " + job + " location: " + location + " type: " + type + " remote: " + remote + " searchDate: " + searchDate);
         return Objects.isNull(searchDate) ? jobPostActivityRepository.searchWithoutDate(job, location, remote, type)
                                         : jobPostActivityRepository.search(job, location, remote, type, searchDate);
     }
