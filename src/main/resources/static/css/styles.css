@@ -398,6 +398,10 @@ a.color-text:hover {
 .btn-sec.btn-black {
   background: #191d34;
 }
+/*my self do it*/
+.btn-sec.btn-green {
+  background: #3c763d;
+}
 span.title-span {
   font-size: 14px;
   font-weight: 400;
