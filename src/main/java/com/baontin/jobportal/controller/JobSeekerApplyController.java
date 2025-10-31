@@ -90,7 +90,7 @@ public class JobSeekerApplyController {
         return "job-details";
     }
 
-    @PostMapping("job-details/apply/{id}")
+    @PostMapping("/job-details/apply/{id}")
     public String apply(@PathVariable("id") int id, JobSeekerApply jobSeekerApply) {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
