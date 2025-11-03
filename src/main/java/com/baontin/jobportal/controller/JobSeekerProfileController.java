@@ -5,7 +5,13 @@ import com.baontin.jobportal.entity.Skills;
 import com.baontin.jobportal.entity.Users;
 import com.baontin.jobportal.repository.UsersRepository;
 import com.baontin.jobportal.services.JobSeekerProfileService;
+import com.baontin.jobportal.util.FileDownloadUtil;
 import com.baontin.jobportal.util.FileUploadUtil;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,12 +19,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -125,4 +129,60 @@ public class JobSeekerProfileController {
 
     }
 
+    @GetMapping("/{id}")
+    public String candidateProfile(@PathVariable("id") int id, Model model) {
+
+        Optional<JobSeekerProfile> jobSeekerProfile =  jobSeekerProfileService.getOne(id);
+        model.addAttribute("profile", jobSeekerProfile.get());
+
+        return "job-seeker-profile";
+    }
+
+    /* ResponseEntity<?>
+    * ResponseEntity is a Spring class that lets you build a full HTTP response — not just data:
+      [Status code, Headers, Body (actual file or message)]
+    * <?> means it can return any type (generic wildcard). In this case is:
+      + a Resource (for the file),
+      + or a String (error message).
+
+    * */
+    @GetMapping("/downloadResume")
+    public ResponseEntity<?> downloadResume(@RequestParam("fileName") String fileName,
+                                            @RequestParam("userID") String userId) {
+
+        FileDownloadUtil fileDownloadUtil = new FileDownloadUtil();
+        Resource resource = null;
+
+        try {
+            resource = fileDownloadUtil.getFileAsResource(
+                    "photos/candidate/" + userId, fileName);
+
+        } catch (IOException ioe) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        if (resource == null) {
+            return new ResponseEntity<>("File not found", HttpStatus.NOT_FOUND);
+        }
+
+//        System.out.println(resource);
+//        System.out.println(resource.getFilename());
+
+        /*
+        * "application/octet-stream" → generic binary type (safe for download)
+        * "attachment; filename=..." → tells the browser “download this file instead of displaying it.”
+        *
+        result:
+        * Status: 200 OK
+        * Header: Content-Disposition: attachment; filename="resume.pdf"
+        * Body: the actual file content (Spring automatically streams the file)
+        * */
+        String contentType = "application/octet-stream";
+        String headerValue = "attachment; filename=\"" + resource.getFilename() + "\"";
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, headerValue)
+                .body(resource);
+    }
 }
